@@ -1,16 +1,13 @@
 using System;
-using System.Text;
 using System.Security.Claims;
 using System.Security.Principal;
 using System.Threading.Tasks;
-using CustomTokenAuthProvider;
-using Microsoft.AspNetCore.Builder;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.Extensions.Options;
 
 namespace Blog.TokenAuthGettingStarted
 {
-    using Microsoft.AspNetCore.Authentication.Cookies;
+    using System.Text;
+    using CustomTokenProvider;
     using Microsoft.AspNetCore.Authentication.JwtBearer;
     using Microsoft.AspNetCore.Http;
     using Microsoft.Extensions.DependencyInjection;
@@ -21,7 +18,7 @@ namespace Blog.TokenAuthGettingStarted
         private void ConfigureAuth(IServiceCollection services)
         {
 
-          //  var signingKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(Configuration.GetSection("TokenAuthentication:SecretKey").Value));
+            signingKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(Configuration.GetSection("TokenAuthentication:SecretKey").Value));
 
 
             var tokenValidationParameters = new TokenValidationParameters
@@ -58,24 +55,25 @@ namespace Blog.TokenAuthGettingStarted
                 .AddAuthentication(options =>
                 {
                     options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
-
                 }
                 )
-                .AddJwtBearer(options =>
-                {
-                    options.Authority = "http://localhost:50000/";
-                    options.Audience = "resource-server";
-                    options.RequireHttpsMetadata = false;
-                    options.TokenValidationParameters = tokenValidationParameters;
-
-                })
                 .AddCookie(o =>
                 {
+                    o.Cookie.Domain = "http://localhost:50000/";
+                    o.Cookie.Expiration = DateTime.UtcNow.AddMinutes(10).TimeOfDay;
                     o.Cookie.Name = Configuration.GetSection("TokenAuthentication:CookieName").Value;
-                    o.TicketDataFormat = new CustomJwtDataFormat(
-                        SecurityAlgorithms.HmacSha256,
-                        tokenValidationParameters);
+                    o.TicketDataFormat = new CustomJwtDataFormat( SecurityAlgorithms.HmacSha256, tokenValidationParameters);
                     o.LoginPath = new PathString(Configuration.GetSection("TokenAuthentication:TokenPath").Value);
+                })
+                .AddJwtBearer(options =>
+                {
+                    //options.Authority = "http://localhost:50000/";
+                    //options.Audience = "resource-server";
+                    options.RequireHttpsMetadata = false;
+                    options.TokenValidationParameters = tokenValidationParameters;
+                    //options.SaveToken = true;
+
+
                 })
 
 

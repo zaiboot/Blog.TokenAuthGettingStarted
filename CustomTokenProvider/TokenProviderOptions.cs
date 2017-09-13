@@ -1,10 +1,10 @@
-using System;
-using System.Security.Claims;
-using System.Threading.Tasks;
-using Microsoft.IdentityModel.Tokens;
-
-namespace CustomTokenAuthProvider
+namespace Blog.TokenAuthGettingStarted.CustomTokenProvider
 {
+    using System;
+    using System.Security.Claims;
+    using System.Threading.Tasks;
+    using Microsoft.IdentityModel.Tokens;
+
     public class TokenProviderOptions
     { 
         /// <summary>

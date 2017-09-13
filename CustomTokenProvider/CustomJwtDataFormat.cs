@@ -1,4 +1,4 @@
-namespace CustomTokenAuthProvider
+namespace Blog.TokenAuthGettingStarted.CustomTokenProvider
 {
     using System;
     using System.IdentityModel.Tokens.Jwt;

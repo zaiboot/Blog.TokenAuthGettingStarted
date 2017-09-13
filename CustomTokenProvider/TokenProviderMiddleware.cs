@@ -1,13 +1,12 @@
-using System;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Options;
-using Newtonsoft.Json;
-
-namespace CustomTokenAuthProvider
+namespace Blog.TokenAuthGettingStarted.CustomTokenProvider
 {
+    using System;
+    using System.IdentityModel.Tokens.Jwt;
+    using System.Security.Claims;
+    using System.Threading.Tasks;
+    using Microsoft.AspNetCore.Http;
+    using Microsoft.Extensions.Options;
+    using Newtonsoft.Json;
 
     public class TokenProviderMiddleware
     {
@@ -66,7 +65,7 @@ namespace CustomTokenAuthProvider
             var now = DateTime.UtcNow;
 
           
-            var claims = new Claim[]
+            var claims = new[]
             {
                 new Claim(JwtRegisteredClaimNames.Sub, username),
                 new Claim(JwtRegisteredClaimNames.Jti, await _options.NonceGenerator()),
@@ -91,7 +90,8 @@ namespace CustomTokenAuthProvider
 
             // Serialize and return the response
             context.Response.ContentType = "application/json";
-            await context.Response.WriteAsync(JsonConvert.SerializeObject(response, _serializerSettings));
+            context.Response.Cookies.Append("access_token", encodedJwt);
+           await context.Response.WriteAsync(JsonConvert.SerializeObject(response, _serializerSettings));
         }
 
         private static void ThrowIfInvalidOptions(TokenProviderOptions options)
