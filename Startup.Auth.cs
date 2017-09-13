@@ -10,13 +10,18 @@ using Microsoft.Extensions.Options;
 
 namespace Blog.TokenAuthGettingStarted
 {
+    using Microsoft.AspNetCore.Authentication.Cookies;
+    using Microsoft.AspNetCore.Authentication.JwtBearer;
+    using Microsoft.AspNetCore.Http;
+    using Microsoft.Extensions.DependencyInjection;
+
     public partial class Startup
     {
 
-        private void ConfigureAuth(IApplicationBuilder app)
+        private void ConfigureAuth(IServiceCollection services)
         {
 
-            var signingKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(Configuration.GetSection("TokenAuthentication:SecretKey").Value));
+          //  var signingKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(Configuration.GetSection("TokenAuthentication:SecretKey").Value));
 
 
             var tokenValidationParameters = new TokenValidationParameters
@@ -36,38 +41,78 @@ namespace Blog.TokenAuthGettingStarted
                 ClockSkew = TimeSpan.Zero
             };
 
-            app.UseJwtBearerAuthentication(new JwtBearerOptions
-            {
-                AutomaticAuthenticate = true,
-                AutomaticChallenge = true,
-                TokenValidationParameters = tokenValidationParameters
-            });
+            /*
+             services.AddAuthentication(options =>
+        {
+            options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+        })
 
-   
+        .AddJwtBearer(options =>
+        {
+            options.Authority = "http://localhost:30940/";
+            options.Audience = "resource-server";
+            options.RequireHttpsMetadata = false;
+        }); 
+             * */
+            services
+                .AddAuthentication(options =>
+                {
+                    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
 
-            app.UseCookieAuthentication(new CookieAuthenticationOptions
-            {
-                AutomaticAuthenticate = true,
-                AutomaticChallenge = true,
-                AuthenticationScheme = "Cookie",
-                CookieName = Configuration.GetSection("TokenAuthentication:CookieName").Value,
-                TicketDataFormat = new CustomJwtDataFormat(
-                    SecurityAlgorithms.HmacSha256,
-                    tokenValidationParameters)
-            });
+                }
+                )
+                .AddJwtBearer(options =>
+                {
+                    options.Authority = "http://localhost:50000/";
+                    options.Audience = "resource-server";
+                    options.RequireHttpsMetadata = false;
+                    options.TokenValidationParameters = tokenValidationParameters;
 
-           var tokenProviderOptions = new TokenProviderOptions
-            {
-                Path = Configuration.GetSection("TokenAuthentication:TokenPath").Value,
-                Audience = Configuration.GetSection("TokenAuthentication:Audience").Value,
-                Issuer = Configuration.GetSection("TokenAuthentication:Issuer").Value,
-                SigningCredentials = new SigningCredentials(signingKey, SecurityAlgorithms.HmacSha256),
-                IdentityResolver = GetIdentity
-            };
+                })
+                .AddCookie(o =>
+                {
+                    o.Cookie.Name = Configuration.GetSection("TokenAuthentication:CookieName").Value;
+                    o.TicketDataFormat = new CustomJwtDataFormat(
+                        SecurityAlgorithms.HmacSha256,
+                        tokenValidationParameters);
+                    o.LoginPath = new PathString(Configuration.GetSection("TokenAuthentication:TokenPath").Value);
+                })
 
-            app.UseMiddleware<TokenProviderMiddleware>(Options.Create(tokenProviderOptions));
 
-        
+            ;
+
+            //services.UseJwtBearerAuthentication(new JwtBearerOptions
+            //{
+            //    //AutomaticAuthenticate = true,
+            //    //AutomaticChallenge = true,
+
+            //});
+
+
+
+            //services.UseCookieAuthentication(new CookieAuthenticationOptions
+            //{
+            //    //AutomaticAuthenticate = true,
+            //    //AutomaticChallenge = true,
+            //    //AuthenticationScheme = "Cookie",
+            //    //  CookieName = Configuration.GetSection("TokenAuthentication:CookieName").Value,
+            //    TicketDataFormat = new CustomJwtDataFormat(
+            //        SecurityAlgorithms.HmacSha256,
+            //        tokenValidationParameters)
+            //});
+
+            //var tokenProviderOptions = new TokenProviderOptions
+            //{
+            //    Path = Configuration.GetSection("TokenAuthentication:TokenPath").Value,
+            //    Audience = Configuration.GetSection("TokenAuthentication:Audience").Value,
+            //    Issuer = Configuration.GetSection("TokenAuthentication:Issuer").Value,
+            //    SigningCredentials = new SigningCredentials(signingKey, SecurityAlgorithms.HmacSha256),
+            //    IdentityResolver = GetIdentity
+            //};
+
+            //services.UseMiddleware<TokenProviderMiddleware>(Options.Create(tokenProviderOptions));
+
+
         }
 
         private Task<ClaimsIdentity> GetIdentity(string username, string password)
@@ -81,6 +126,6 @@ namespace Blog.TokenAuthGettingStarted
             // Credentials are invalid, or account doesn't exist
             return Task.FromResult<ClaimsIdentity>(null);
         }
-            
+
     }
 }

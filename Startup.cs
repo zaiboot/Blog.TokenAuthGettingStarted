@@ -7,6 +7,11 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace Blog.TokenAuthGettingStarted
 {
+    using System.Text;
+    using CustomTokenAuthProvider;
+    using Microsoft.AspNetCore.Authentication.JwtBearer;
+    using Microsoft.Extensions.Options;
+
     public partial class Startup
     {
         public SymmetricSecurityKey signingKey;
@@ -29,6 +34,9 @@ namespace Blog.TokenAuthGettingStarted
         {
             // Add framework services.
             services.AddMvc();
+            ConfigureAuth(services);
+
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -37,8 +45,21 @@ namespace Blog.TokenAuthGettingStarted
 
             loggerFactory.AddConsole(Configuration.GetSection("Logging"));
             loggerFactory.AddDebug();
+            app.UseAuthentication();
 
-            ConfigureAuth(app);
+            var signingKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(Configuration.GetSection("TokenAuthentication:SecretKey").Value));
+
+            var tokenProviderOptions = new TokenProviderOptions
+            {
+                Path = Configuration.GetSection("TokenAuthentication:TokenPath").Value,
+                Audience = Configuration.GetSection("TokenAuthentication:Audience").Value,
+                Issuer = Configuration.GetSection("TokenAuthentication:Issuer").Value,
+                SigningCredentials = new SigningCredentials(signingKey, SecurityAlgorithms.HmacSha256),
+                IdentityResolver = GetIdentity
+            };
+
+            app.UseMiddleware<TokenProviderMiddleware>(Options.Create(tokenProviderOptions));
+
 
             app.UseMvc();
         }

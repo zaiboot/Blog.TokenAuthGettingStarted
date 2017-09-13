@@ -1,22 +1,20 @@
-using System;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Http.Authentication;
-using Microsoft.IdentityModel.Tokens;
-
-
 namespace CustomTokenAuthProvider
 {
+    using System;
+    using System.IdentityModel.Tokens.Jwt;
+    using System.Security.Claims;
+    using Microsoft.AspNetCore.Authentication;
+    using Microsoft.IdentityModel.Tokens;
+
     public class CustomJwtDataFormat : ISecureDataFormat<AuthenticationTicket>
     {
-        private readonly string algorithm;
-        private readonly TokenValidationParameters validationParameters;
+        private readonly string _algorithm;
+        private readonly TokenValidationParameters _validationParameters;
 
         public CustomJwtDataFormat(string algorithm, TokenValidationParameters validationParameters)
         {
-            this.algorithm = algorithm;
-            this.validationParameters = validationParameters;
+            _algorithm = algorithm;
+            _validationParameters = validationParameters;
         }
 
         public AuthenticationTicket Unprotect(string protectedText)
@@ -25,23 +23,20 @@ namespace CustomTokenAuthProvider
         public AuthenticationTicket Unprotect(string protectedText, string purpose)
         {
             var handler = new JwtSecurityTokenHandler();
-            ClaimsPrincipal principal = null;
-            SecurityToken validToken = null;
+            ClaimsPrincipal principal;
 
             try
             {
-                principal = handler.ValidateToken(protectedText, this.validationParameters, out validToken);
+                principal = handler.ValidateToken(protectedText, _validationParameters, out var validToken);
 
-                var validJwt = validToken as JwtSecurityToken;
-
-                if (validJwt == null)
+                if (!(validToken is JwtSecurityToken validJwt))
                 {
                     throw new ArgumentException("Invalid JWT");
                 }
 
-                if (!validJwt.Header.Alg.Equals(algorithm, StringComparison.Ordinal))
+                if (!validJwt.Header.Alg.Equals(_algorithm, StringComparison.Ordinal))
                 {
-                    throw new ArgumentException($"Algorithm must be '{algorithm}'");
+                    throw new ArgumentException($"Algorithm must be '{_algorithm}'");
                 }
             }
             catch (SecurityTokenValidationException)
