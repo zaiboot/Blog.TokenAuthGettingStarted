@@ -57,17 +57,17 @@ namespace Blog.TokenAuthGettingStarted
                     options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
                 }
                 )
-                .AddCookie(o =>
-                {
-                    o.Cookie.Domain = "http://localhost:50000/";
-                    o.Cookie.Expiration = DateTime.UtcNow.AddMinutes(10).TimeOfDay;
-                    o.Cookie.Name = Configuration.GetSection("TokenAuthentication:CookieName").Value;
-                    o.TicketDataFormat = new CustomJwtDataFormat( SecurityAlgorithms.HmacSha256, tokenValidationParameters);
-                    o.LoginPath = new PathString(Configuration.GetSection("TokenAuthentication:TokenPath").Value);
-                })
+                //.AddCookie(o =>
+                //{
+                //    o.Cookie.Domain = "http://localhost:50000/";
+                //    o.Cookie.Expiration = DateTime.UtcNow.AddMinutes(10).TimeOfDay;
+                //    o.Cookie.Name = Configuration.GetSection("TokenAuthentication:CookieName").Value;
+                //    o.TicketDataFormat = new CustomJwtDataFormat( SecurityAlgorithms.HmacSha256, tokenValidationParameters);
+                //    o.LoginPath = new PathString(Configuration.GetSection("TokenAuthentication:TokenPath").Value);
+                //})
                 .AddJwtBearer(options =>
                 {
-                    //options.Authority = "http://localhost:50000/";
+                    //options.Authority = "http://localhost:5000/";
                     //options.Audience = "resource-server";
                     options.RequireHttpsMetadata = false;
                     options.TokenValidationParameters = tokenValidationParameters;
